@@ -95,6 +95,7 @@ class EnhancedTableFooter extends React.PureComponent {
       showToolbar = true;
     }
     if (showToolbar) {
+      //see: https://github.com/mui-org/material-ui/issues/8416
       return (
         <Toolbar className={classes.root}>
           <div className={classes.title}>
@@ -107,37 +108,43 @@ class EnhancedTableFooter extends React.PureComponent {
           <div className={classes.spacer}>
             {deleteAllowed && selection.recs.size > 0 && (
               <Tooltip title={actualDeleteTitle}>
-                <IconButton
-                  disabled={deleteDisabled}
-                  onClick={() => this.handleDelete()}
-                  aria-label={actualDeleteTitle}
-                >
-                  <DeleteIcon color="secondary" />
-                </IconButton>
+                <div>
+                  <IconButton
+                    disabled={deleteDisabled}
+                    onClick={() => this.handleDelete()}
+                    aria-label={actualDeleteTitle}
+                  >
+                    <DeleteIcon color="secondary" />
+                  </IconButton>
+                </div>
               </Tooltip>
             )}
           </div>
           <div className={classes.actions}>
             {editAllowed && selection.recs.size === 1 && (
               <Tooltip title={actualEditTitle}>
-                <IconButton
-                  disabled={editDisabled}
-                  onClick={() => this.handleEdit()}
-                  aria-label={actualEditTitle}
-                >
-                  <EditIcon />
-                </IconButton>
+                <div>
+                  <IconButton
+                    disabled={editDisabled}
+                    onClick={() => this.handleEdit()}
+                    aria-label={actualEditTitle}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </div>
               </Tooltip>
             )}
             {addAllowed && (
               <Tooltip title={actualAddTitle}>
-                <IconButton
-                  disabled={addDisabled}
-                  aria-label={actualAddTitle}
-                  onClick={() => this.handleAdd()}
-                >
-                  <AddIcon />
-                </IconButton>
+                <div>
+                  <IconButton
+                    disabled={addDisabled}
+                    aria-label={actualAddTitle}
+                    onClick={() => this.handleAdd()}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </div>
               </Tooltip>
             )}
           </div>

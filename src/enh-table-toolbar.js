@@ -89,12 +89,14 @@ class EnhancedTableToolbar extends React.Component {
           <div className={classes.actions}>
             {searchAllowed && (
               <Tooltip title={actualSearchTitle}>
-                <IconButton
-                  aria-label={actualSearchTitle}
-                  onClick={() => this.handleShowSearch()}
-                >
-                  <SearchIcon />
-                </IconButton>
+                <div>
+                  <IconButton
+                    aria-label={actualSearchTitle}
+                    onClick={() => this.handleShowSearch()}
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </div>
               </Tooltip>
             )}
           </div>
