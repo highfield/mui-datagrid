@@ -16,7 +16,7 @@ export function SelectNone() {
 
 export function SelectToggle(target) {
   return function(recordset, selection, isMulti) {
-    const tmp = purgeSelection(recordset, selection, target);
+    const tmp = purgeSelection(recordset, selection, isMulti, target);
     return {
       recs: tmp.has(target)
         ? tmp.delete(target)
@@ -29,7 +29,7 @@ export function SelectToggle(target) {
 
 export function SelectSet(target) {
   return function(recordset, selection, isMulti) {
-    const tmp = purgeSelection(recordset, selection, target);
+    const tmp = purgeSelection(recordset, selection, isMulti, target);
     const recs = recordset.indexOf(target) >= 0 ? tmp.add(target) : tmp;
     var scrollToIndex;
     if (recs.size === 1) {
@@ -44,13 +44,15 @@ export function SelectSet(target) {
 
 export function SelectReset(target) {
   return function(recordset, selection, isMulti) {
-    const tmp = purgeSelection(recordset, selection, target);
+    const tmp = purgeSelection(recordset, selection, isMulti, target);
     return { recs: tmp.delete(target) };
   };
 }
 
-function purgeSelection(recordset, selection, target) {
-  return target
+function purgeSelection(recordset, selection, isMulti, target) {
+  return isMulti
+    ?selection.filter(rec => recordset.indexOf(rec) >= 0)
+    : target
     ? selection.filter(rec => rec === target)
-    : selection.filter(rec => recordset.indexOf(rec) >= 0);
+    : selection.clear();
 }

@@ -49,21 +49,21 @@ class EnhancedTableFooter extends React.PureComponent {
   handleAdd = () => {
     const { owner, onAdd, selection } = this.props;
     if (onAdd) {
-      onAdd({ owner, selection: selection.recs });
+      onAdd({ sender: owner, selection: selection.recs });
     }
   };
 
   handleEdit = () => {
     const { owner, onEdit, selection } = this.props;
     if (onEdit) {
-      onEdit({ owner, selection: selection.recs });
+      onEdit({ sender: owner, selection: selection.recs });
     }
   };
 
   handleDelete = () => {
     const { owner, onDelete, selection } = this.props;
     if (onDelete) {
-      onDelete({ owner, selection: selection.recs });
+      onDelete({ sender: owner, selection: selection.recs });
     }
   };
 

@@ -18,11 +18,8 @@ import {
 import EnhancedTableToolbar from "./enh-table-toolbar";
 import EnhancedTableFooter from "./enh-table-footer";
 import { SelectAll, SelectNone, SelectToggle } from "./enh-table-utils";
-//import EnhancedTableRowRenderer from "./enh-table-row-renderer";
-//import { ImmutableSelection } from "./enh-table-utils";
 import immutable from "immutable";
 import memoize from "memoize-one";
-//import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const styles = theme => ({
   root: {
@@ -65,59 +62,33 @@ class EnhancedTable extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    //const { selectionMode } = props;
-
-    const sortBy = "";
-    const sortDirection = SortDirection.ASC;
     this.state = {
-      //sortedList: new immutable.List(),
-      searchPredicate: null,
-      sortBy,
-      sortDirection,
-      selectionRequest: null
-      //recordset: new ImmutableRecordset({
-      //  store: props.store,
-      //  list: new immutable.List(),
-      //  sortBy,
-      //  sortDirection
-      //}),
-      //selection: EnhancedTable.initSelection(props),
-      //oldSelectionMode: props.selectionMode
+      recordset: new immutable.List(),
+      actualColumns: [],
+      selection: {
+        recs: new immutable.Set()
+      }
     };
 
-    this._sort = this._sort.bind(this);
+    this.handleSort = this.handleSort.bind(this);
     this.handleSearchChanged = this.handleSearchChanged.bind(this);
-    //this._getRowHeight = this._getRowHeight.bind(this);
     this.getRowClassName = this.getRowClassName.bind(this);
     this.cellRenderer = this.cellRenderer.bind(this);
     this.headerRenderer = this.headerRenderer.bind(this);
     this.setSelection = this.setSelection.bind(this);
+    this.triggerUpdate = this.triggerUpdate.bind(this);
+    this.updateState = this.updateState.bind(this);
   }
 
-  currentRecordset;
-  currentSelection;
-  /*
-  static getDerivedStateFromProps(props, state) {
-    // Any time the current user changes,
-    // Reset any parts of state that are tied to that user.
-    // In this simple example, that's just the email.
-    if (props.selectionMode !== state.oldSelectionMode) {
-      return {
-        oldSelectionMode: props.selectionMode,
-        selection: EnhancedTable.initSelection(props)
-      };
-    }
-    return null;
-  }
+  tmr = 0;
+  cache = {
+    selectionMode: null,
+    selectionRequest: null,
+    searchPredicate: null,
+    sortBy: "",
+    sortDirection: SortDirection.ASC
+  };
 
-  static initSelection(props) {
-    const { selectionMode } = props;
-    return new ImmutableSelection({
-      isEnabled: selectionMode === "single" || selectionMode === "multi",
-      isMulti: selectionMode === "multi"
-    });
-  }
-*/
   getActualColumns = memoize((columns, selectionMode, isSelectionEnabled) => {
     const actualColumns = [...columns];
     if (isSelectionEnabled) {
@@ -128,7 +99,6 @@ class EnhancedTable extends React.PureComponent {
         disableSort: true
       });
     }
-    console.log("columns");
     return actualColumns;
   });
 
@@ -153,54 +123,80 @@ class EnhancedTable extends React.PureComponent {
         isEnabled && selectionRequest
           ? selectionRequest(
               actualRecordset,
-              this.currentSelection.recs,
+              this.state.selection.recs,
               isMulti
             )
           : { recs: new immutable.Set() };
 
-      return {
+      const selection = {
         recs,
         scrollToIndex,
         isEnabled,
         isMulti,
         isPartial: recs.size > 0 && recs.size < actualRecordset.size
       };
+
+      if (isEnabled) {
+        const { onSelectionChanged } = this.props;
+        if (onSelectionChanged) {
+          onSelectionChanged({ sender: this, selection });
+        }
+      }
+
+      return selection;
     }
   );
 
-  setSelection(selectionRequest) {
-    this.setState({ selectionRequest });
+  updateState() {
+    const { getItems, columns } = this.props;
+
+    const {
+      searchPredicate,
+      sortBy,
+      sortDirection,
+      selectionMode,
+      selectionRequest
+    } = this.cache;
+
+    const items = (getItems && getItems()) || new immutable.List();
+    const recordset = this.getActualRecordset(
+      items,
+      searchPredicate,
+      sortBy,
+      sortDirection
+    );
+    const selection = this.getActualSelection(
+      recordset,
+      selectionMode,
+      selectionRequest
+    );
+    const actualColumns = this.getActualColumns(
+      columns,
+      selectionMode,
+      selection.isEnabled
+    );
+    this.setState({
+      recordset,
+      actualColumns,
+      selection
+    });
   }
 
-  /*
-  _sort({ sortBy, sortDirection }) {
-    const sortedList = this._sortList({ sortBy, sortDirection });
-    this.setState({ sortBy, sortDirection, sortedList });
+  triggerUpdate() {
+    if (this.tmr) clearTimeout(this.tmr);
+    this.tmr = setTimeout(() => {
+      this.tmr = 0;
+      this.updateState();
+    }, 50);
   }
-
-  _sortList({ sortBy, sortDirection }) {
-    const { store } = this.props;
-    return store
-      .getItems()
-      .sortBy(item => item[sortBy])
-      .update(list =>
-        sortDirection === SortDirection.DESC ? list.reverse() : list
-      );
-  }
-*/
-  //_getRowHeight({index}) {
-  //  const {sortedList} = this.state;
-  //  return sortedList.get(index).size;
-  //}
 
   componentDidMount() {
-    //const { store } = this.props;
-    //const { sortBy, sortDirection } = this.state;
-    //store.load();
-    //this._sort({ sortBy, sortDirection });
-    //this.setState({
-    //  recordset: this.state.recordset.load()
-    //});
+    this.triggerUpdate();
+  }
+
+  setSelection(selectionRequest) {
+    this.cache.selectionRequest = selectionRequest;
+    this.triggerUpdate();
   }
 
   getRowClassName = ({ index }) => {
@@ -211,18 +207,10 @@ class EnhancedTable extends React.PureComponent {
   };
 
   cellRenderer = ({ cellData, columnIndex = null }) => {
-    const {
-      classes,
-      rowHeight,
-      onRowClick,
-      columns,
-      selectionMode
-    } = this.props;
-    const actualColumns = this.getActualColumns(
-      columns,
-      selectionMode,
-      this.currentSelection.isEnabled
-    );
+    const { classes, rowHeight, onRowClick } = this.props;
+
+    const { actualColumns } = this.state;
+
     return (
       <TableCell
         component="div"
@@ -250,12 +238,10 @@ class EnhancedTable extends React.PureComponent {
     sortDirection,
     sort
   }) => {
-    const { headerHeight, classes, columns, selectionMode } = this.props;
-    const actualColumns = this.getActualColumns(
-      columns,
-      selectionMode,
-      this.currentSelection.isEnabled
-    );
+    const { headerHeight, classes } = this.props;
+
+    const { actualColumns } = this.state;
+
     const direction = {
       [SortDirection.ASC]: "asc",
       [SortDirection.DESC]: "desc"
@@ -299,42 +285,27 @@ class EnhancedTable extends React.PureComponent {
 
   handleRowClick = ({ event, rowData }) => {
     event.stopPropagation();
-    //const selection = this.state.selection.toggle(rowData);
-    //this.setState({ selection });
-    this.setState({
-      selectionRequest: SelectToggle(rowData)
-    });
+    this.setSelection(SelectToggle(rowData));
   };
 
   selectionCellRenderer = ({ cellData, columnIndex = null }) => {
-    //const { selection } = this.state;
     const { rowData } = cellData;
-    return <Checkbox checked={this.currentSelection.recs.has(rowData)} />;
+    const { selection } = this.state;
+    return <Checkbox checked={selection.recs.has(rowData)} />;
   };
 
   handleHeaderSelectionCell = event => {
-    //const { selection } = this.state;
-    if (event.target.checked) {
-      //this.setState({ selection: selection.all(this.currentRecordset) });
-      this.setState({
-        selectionRequest: SelectAll()
-      });
-    } else {
-      this.setState({
-        selectionRequest: SelectNone()
-      });
-      //this.setState({ selection: selection.none() });
-    }
+    this.setSelection(event.target.checked ? SelectAll() : SelectNone());
   };
 
   selectionHeaderRenderer = () => {
-    //const { selection } = this.state;
-    const visibility = this.currentSelection.isMulti ? "visible" : "hidden";
+    const { selection } = this.state;
+    const visibility = selection.isMulti ? "visible" : "hidden";
     return (
       <Checkbox
         style={{ visibility }}
-        checked={this.currentSelection.recs.size > 0}
-        indeterminate={this.currentSelection.isPartial}
+        checked={selection.recs.size > 0}
+        indeterminate={selection.isPartial}
         onClick={e => this.handleHeaderSelectionCell(e)}
       />
     );
@@ -345,9 +316,9 @@ class EnhancedTable extends React.PureComponent {
     index
   ) => {
     const { classes } = this.props;
-    //const { selection } = this.state;
+    const { selection } = this.state;
     let renderer;
-    if (index === 0 && this.currentSelection.isEnabled) {
+    if (index === 0 && selection.isEnabled) {
       renderer = cellRendererProps =>
         this.selectionCellRenderer({
           cellData: cellRendererProps,
@@ -367,7 +338,7 @@ class EnhancedTable extends React.PureComponent {
       <Column
         key={dataKey}
         headerRenderer={headerProps =>
-          index === 0 && this.currentSelection.isEnabled
+          index === 0 && selection.isEnabled
             ? this.selectionHeaderRenderer({
                 ...headerProps,
                 columnIndex: index
@@ -375,7 +346,7 @@ class EnhancedTable extends React.PureComponent {
             : this.headerRenderer({
                 ...headerProps,
                 columnIndex: index,
-                sort: this._sort
+                sort: this.handleSort
               })
         }
         className={classNames(classes.flexContainer, className)}
@@ -386,21 +357,16 @@ class EnhancedTable extends React.PureComponent {
     );
   };
 
-  _sort({ sortBy, sortDirection }) {
-    this.setState({
-      sortBy,
-      sortDirection
-      //recordset: this.state.recordset.sort(args)
-    });
+  handleSort({ sortBy, sortDirection }) {
+    this.cache.sortBy = sortBy;
+    this.cache.sortDirection = sortDirection;
+    this.triggerUpdate();
   }
 
   handleSearchChanged(text) {
     const { searchRule } = this.props;
-    const searchPredicate = text && searchRule ? searchRule(text) : null;
-    this.setState({
-      searchPredicate
-      //recordset: this.state.recordset.search(predicate)
-    });
+    this.cache.searchPredicate = text && searchRule ? searchRule(text) : null;
+    this.triggerUpdate();
   }
 
   render() {
@@ -411,31 +377,18 @@ class EnhancedTable extends React.PureComponent {
       selectionMode,
       ...tableProps
     } = this.props;
-    const {
-      searchPredicate,
-      sortBy,
-      sortDirection,
-      selectionRequest
-    } = this.state;
 
-    const items = (getItems && getItems()) || new immutable.List();
-    this.currentRecordset = this.getActualRecordset(
-      items,
-      searchPredicate,
-      sortBy,
-      sortDirection
-    );
-    this.currentSelection = this.getActualSelection(
-      this.currentRecordset,
-      selectionMode,
-      selectionRequest
-    );
-    const actualColumns = this.getActualColumns(
-      columns,
-      selectionMode,
-      this.currentSelection.isEnabled
-    );
-    const rowGetter = ({ index }) => this.currentRecordset.get(index);
+    if (selectionMode !== this.cache.selectionMode) {
+      this.cache.selectionMode = selectionMode;
+      this.triggerUpdate();
+    }
+
+    const { recordset, actualColumns, selection } = this.state;
+
+    const { sortBy, sortDirection } = this.cache;
+
+    const rowGetter = ({ index }) => recordset.get(index);
+
     return (
       <div className={classes.root}>
         <EnhancedTableToolbar
@@ -450,8 +403,8 @@ class EnhancedTable extends React.PureComponent {
                 height={height}
                 width={width}
                 rowGetter={rowGetter}
-                rowCount={this.currentRecordset.size}
-                sort={this._sort}
+                rowCount={recordset.size}
+                sort={this.handleSort}
                 sortBy={sortBy}
                 sortDirection={sortDirection}
                 headerHeight={56}
@@ -459,7 +412,7 @@ class EnhancedTable extends React.PureComponent {
                 {...tableProps}
                 rowClassName={this.getRowClassName}
                 rowRenderer={this.rowRenderer}
-                scrollToIndex={this.currentSelection.scrollToIndex}
+                scrollToIndex={selection.scrollToIndex}
               >
                 {actualColumns.map(this.columnRenderer)}
               </Table>
@@ -468,7 +421,7 @@ class EnhancedTable extends React.PureComponent {
         </div>
         <EnhancedTableFooter
           owner={this}
-          selection={this.currentSelection}
+          selection={selection}
           {...tableProps}
         />
       </div>
@@ -476,26 +429,4 @@ class EnhancedTable extends React.PureComponent {
   }
 }
 
-/*
-MuiVirtualizedTable.propTypes = {
-  classes: PropTypes.object.isRequired,
-  columns: PropTypes.arrayOf(
-    PropTypes.shape({
-      cellContentRenderer: PropTypes.func,
-      dataKey: PropTypes.string.isRequired,
-      width: PropTypes.number.isRequired
-    })
-  ).isRequired,
-  headerHeight: PropTypes.number,
-  onRowClick: PropTypes.func,
-  rowClassName: PropTypes.string,
-  rowHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.func]),
-  sort: PropTypes.func
-};
-
-MuiVirtualizedTable.defaultProps = {
-  headerHeight: 56,
-  rowHeight: 56
-};
-*/
 export default withStyles(styles)(EnhancedTable);

@@ -124,7 +124,7 @@ class ReactVirtualizedTable extends React.PureComponent {
     this.setState({ [name]: event.target.value });
   };
 
-  handleAdd({ owner, selection }) {
+  handleAdd({ sender, selection }) {
     const rec = {
       title: "Title #" + (store.getItems().size + 1),
       author: "Author",
@@ -132,14 +132,18 @@ class ReactVirtualizedTable extends React.PureComponent {
       year: 2019
     };
     store.add(rec);
-    owner.setSelection(SelectSet(rec));
+    sender.setSelection(SelectSet(rec));
   }
 
-  handleEdit({ owner, selection }) {}
+  handleEdit({ sender, selection }) {}
 
-  handleDelete({ owner, selection }) {
+  handleDelete({ sender, selection }) {
     store.delete(selection);
-    owner.setSelection(SelectNone());
+    sender.setSelection(SelectNone());
+  }
+
+  handleSelectionChanged({sender, selection}){
+    console.log("selected=" + selection.recs.size);
   }
 
   render() {
@@ -149,7 +153,6 @@ class ReactVirtualizedTable extends React.PureComponent {
         <Paper className={classes.tablePaper}>
           <EnhancedTable
             getItems={() => store.getItems()}
-            onRowClick={event => console.log(event)}
             columns={columns}
             selectionMode={this.state.selectionMode}
             title={this.state.title}
@@ -161,6 +164,8 @@ class ReactVirtualizedTable extends React.PureComponent {
             onAdd={args => this.handleAdd(args)}
             onEdit={args => this.handleEdit(args)}
             onDelete={args => this.handleDelete(args)}
+            onRowClick={event => console.log(event)}
+            onSelectionChanged={(args)=> this.handleSelectionChanged(args)}
           />
         </Paper>
 
