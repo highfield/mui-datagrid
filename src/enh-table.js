@@ -182,7 +182,7 @@ class EnhancedTable extends React.PureComponent {
     });
   }
 
-  triggerUpdate() {
+  triggerUpdate = () => {
     if (this.tmr) clearTimeout(this.tmr);
     this.tmr = setTimeout(() => {
       this.tmr = 0;
@@ -194,7 +194,7 @@ class EnhancedTable extends React.PureComponent {
     this.triggerUpdate();
   }
 
-  setSelection(selectionRequest) {
+  setSelection = (selectionRequest) => {
     this.cache.selectionRequest = selectionRequest;
     this.triggerUpdate();
   }
