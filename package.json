@@ -1,9 +1,9 @@
 {
-  "title": "Material demo",
+  "title": "A better Material-ui data-grid",
   "devDependencies": {
     "react-scripts": "latest"
   },
-  "description": "https://github.com/mui-org/material-ui/blob/master/docs/src/pages/demos/tables/ReactVirtualizedTable.js",
+  "description": "https://github.com/highfield/mui-datagrid",
   "dependencies": {
     "@material-ui/core": "latest",
     "@material-ui/icons": "3.0.2",
@@ -16,8 +16,8 @@
     "react-virtualized": "latest"
   },
   "keywords": [],
-  "name": "a-better-materialui-data-table",
-  "version": "0.0.139",
+  "name": "@tigro-porzel/mui-datagrid",
+  "version": "1.0.0",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
