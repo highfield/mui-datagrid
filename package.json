@@ -17,7 +17,7 @@
   },
   "keywords": [],
   "name": "@tigro-porzel/mui-datagrid",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

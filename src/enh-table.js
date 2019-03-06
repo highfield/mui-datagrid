@@ -58,7 +58,7 @@ const styles = theme => ({
 
 const selDataKey = "__sel__";
 
-class EnhancedTable extends React.PureComponent {
+class EnhancedTable extends React.Component {
   constructor(props) {
     super(props);
 
@@ -188,16 +188,16 @@ class EnhancedTable extends React.PureComponent {
       this.tmr = 0;
       this.updateState();
     }, 50);
-  }
+  };
 
   componentDidMount() {
     this.triggerUpdate();
   }
 
-  setSelection = (selectionRequest) => {
+  setSelection = selectionRequest => {
     this.cache.selectionRequest = selectionRequest;
     this.triggerUpdate();
-  }
+  };
 
   getRowClassName = ({ index }) => {
     const { classes, rowClassName, onRowClick } = this.props;
