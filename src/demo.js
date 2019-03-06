@@ -142,7 +142,7 @@ class ReactVirtualizedTable extends React.PureComponent {
     sender.setSelection(SelectNone());
   }
 
-  handleSelectionChanged({sender, selection}){
+  handleSelectionChanged({ sender, selection }) {
     console.log("selected=" + selection.recs.size);
   }
 
@@ -152,7 +152,7 @@ class ReactVirtualizedTable extends React.PureComponent {
       <div>
         <Paper className={classes.tablePaper}>
           <EnhancedTable
-            getItems={() => store.getItems()}
+            items={store.getItems()}
             columns={columns}
             selectionMode={this.state.selectionMode}
             title={this.state.title}
@@ -165,7 +165,7 @@ class ReactVirtualizedTable extends React.PureComponent {
             onEdit={args => this.handleEdit(args)}
             onDelete={args => this.handleDelete(args)}
             onRowClick={event => console.log(event)}
-            onSelectionChanged={(args)=> this.handleSelectionChanged(args)}
+            onSelectionChanged={args => this.handleSelectionChanged(args)}
           />
         </Paper>
 
