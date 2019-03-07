@@ -12,7 +12,7 @@ import FormGroup from "@material-ui/core/FormGroup";
 import Select from "@material-ui/core/Select";
 import TextField from "@material-ui/core/TextField";
 import Checkbox from "@material-ui/core/Checkbox";
-import EnhancedTable from "./enh-table.js";
+import EnhancedTable from "./enh-table";
 import Store from "./store";
 import immutable from "immutable";
 import { SelectSet, SelectNone } from "./enh-table-utils";
